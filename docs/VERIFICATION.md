@@ -45,9 +45,9 @@
 
 ## 运行时、包与限制
 
-- 当前 `.oplg`：`dist-pack/otools-uniplayer-0.1.0-dev-macos.oplg`，28 files，pack/verify 通过；不是 6 平台正式包。
+- 当前 `.oplg`：`dist-pack/otools-uniplayer-0.1.0-dev-macos.oplg`，28 files，pack/verify 通过；不是 6 平台正式包。**市场已上架 v0.1.0**（单合包 `otools-uniplayer-0.1.0.oplg`，Release 标签 `plugin-otools-uniplayer-v0.1.0`，仅 macOS 资产，support 标志如实上报）。
 - FFmpeg9.0.2 + 静态 x264 的运行时自包含：`otool -L` 只列系统框架和 `/usr/lib`；部署目标为 macOS12。**未在 macOS12 实机跑**。
 - 两个源码归档、两项许可证、configure/config 证据及全部 runtime 哈希见 `resources/ffmpeg/macos/runtime.json` 和 `docs/MEDIA_RUNTIME.md`。非无担保法律意见；独立进程不是自动 GPL 豁免。
 - 不提供软件 AV1 解码；HDR 输入转 SDR，不承诺原生 HDR 保真；ASS 样式不保留，seek/暂停/变速等重建 pipeline 可能短暂 buffering。
 - 其它 5 平台无实际 asset；Windows/Linux/Intel macOS 未实机测试。系统默认文件关联由用户在设置里选，本轮未修改 OS 关联。
-- 未 commit/push、未建远端仓库、未 release/上架、未更新父仓子模块指针。
+- 已建远端仓并推送、已登记 xyito 超仓子模块指针、已上架市场；SDK 仓同步推送。

@@ -51,7 +51,9 @@ node scripts/verify-plugin.mjs --dev
 
 开发 `.oplg` 只用于当前平台调试。正式打包要求真实六平台 service 与媒体运行时齐全，检查可执行格式、架构、摘要、来源和许可；没有资产的平台**不会生成占位二进制**。
 
-当前 macOS arm64 运行时已从锁定源码静态构建，依赖仅系统库，完整 FFmpeg/x264 源码归档、许可、构建记录和摘要随包提供。详情见 [MEDIA_RUNTIME.md](docs/MEDIA_RUNTIME.md)。其他五平台尚无产物；正式六平台发行仍未完成。AV1 软件解码未包含，最低 macOS 12 部署目标尚未实机验证。
+当前 macOS arm64 运行时已从锁定源码静态构建，依赖仅系统库，完整 FFmpeg/x264 源码归档、许可、构建记录和摘要随包提供。详情见 [MEDIA_RUNTIME.md](docs/MEDIA_RUNTIME.md)。其他五平台尚无产物；AV1 软件解码未包含，最低 macOS 12 部署目标尚未实机验证。
+
+已上架 OTools 插件市场（v0.1.0，单合包，Release 标签 `plugin-otools-uniplayer-v0.1.0`）；`release` environment、`XYCLOUD_PAT` 与 `OTOOLS_PUBLISH_MARKET=true` 三件套已配置。
 
 ## 许可
 

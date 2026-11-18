@@ -1,0 +1,81 @@
+{
+  "date": "2026-11-18",
+  "platform": "macOS 27, Apple Silicon",
+  "scope": "Actual source-built OTools with real Tools tabs and WKWebViews, isolated debug feature; the installed user's OTools and default profile were not controlled.",
+  "feature": "host-integration-test",
+  "restrictions": {
+    "mainBranch": true,
+    "committed": false,
+    "pushed": false,
+    "worktreeCreated": false,
+    "userDataCopiedOrChanged": false,
+    "osFileAssociationRegistered": false,
+    "liveSingleInstanceSocketUntouched": true,
+    "profileRoot": "new canonical 0700 temporary directory, unique net.lingyun.otools.integration.<nonce> identifier and OTOOLS_HOME",
+    "webviews": "incognito main and Tools children; all harness logs, files and media runtime copies under the new profile",
+    "releaseGuard": "cargo rustc -p OTools --features host-integration-test --lib -- -C debug-assertions=no --emit=metadata rejected with the intentional compile_error (exit 101)"
+  },
+  "commands": {
+    "build": "cargo build --manifest-path /Users/admin/Documents/Repos/xyito/otools/otools/Cargo.toml -p OTools --features host-integration-test",
+    "actualHost": "node /Users/admin/Documents/Repos/xyito/otools/otools-uniplayer/scripts/test-host-playback.mjs",
+    "actualPackage": "node /Users/admin/Documents/Repos/xyito/otools/otools-uniplayer/scripts/test-host-playback.mjs --packaged"
+  },
+  "actualHost": {
+    "status": "passed",
+    "artifacts": "/private/var/folders/j2/f7b1vy655b169cnrmjhrcfcm0000gn/T/otools-host-integration-d2b12e01195be5b0c987ab5cbc65c45a-TjFWVR",
+    "log": "/tmp/otools-real-host-run2.log",
+    "entry": "HTTP development test page mounting unchanged production App.vue, host adapter, player session and authenticated HLS; exact dev-debug owner source",
+    "checks": [
+      "Two argv files created two distinct instance IDs, labels and canonical documents in real Tools tabs.",
+      "instances.current and onActivity retained exact instance and source identity; inactive tab delayed its service and did not play.",
+      "Second process argv used the unique single-instance channel and reused the same document tab.",
+      "H264/AAC MP4 used copy and H264/FLAC MKV used transcode; both decoded 320x180 video and advanced.",
+      "Switching tabs paused the inactive sibling; production play control resumed playback.",
+      "Real timeline seek 6s incremented generation, effectiveStart=6 and sourceDuration=45s, then presented additional frames.",
+      "Production external-subtitle selector loaded the synthetic SRT cue through the authenticated service into a local blob track.",
+      "instances.open reuse:new created a third distinct same-document tab without replacing the original.",
+      "Plugin calls to the host-only integration controller were rejected.",
+      "A sibling WebView could not access the other view-lifetime sidecar status.",
+      "Closing one tab reaped its service root while the other real video continued.",
+      "Normal host shutdown reaped all observed service roots and workers."
+    ],
+    "parallelHiddenObservation": {
+      "status": "passed in this run; not a broad background-stability guarantee",
+      "windowSeconds": 3.5,
+      "hiddenVideoAdvanceSeconds": 3.650370152,
+      "visibleVideoAdvanceSeconds": 3.281007772
+    },
+    "normalShutdown": { "observedServiceRoots": 3, "observedWorkers": 8, "remaining": 0 }
+  },
+  "actualPackage": {
+    "status": "passed",
+    "artifacts": "/private/var/folders/j2/f7b1vy655b169cnrmjhrcfcm0000gn/T/otools-host-integration-a992e9ddf09dc906217f8b0b1c58254b-XJzAIz",
+    "log": "/tmp/otools-real-host-package2.log",
+    "entry": "otools-plugin://localhost/otools-uniplayer/dist/index.html",
+    "actualPageOrigin": "otools-plugin://localhost",
+    "source": "market",
+    "instrumentation": "Only the private copied index included a read-only test observer before its unchanged distributed production bundle. The repository dist and production APIs were unchanged.",
+    "installedExecutable": "Copied self-contained bin/resources; host registered exact executable SHA256, size and relative path. No FFMPEG_PATH or FFPROBE_PATH override.",
+    "decodedVideo": { "width": 320, "height": 180, "sourceDuration": 45, "currentTime": 2.380690085, "presentedFrameCallbacks": 56, "totalVideoFrames": 61 },
+    "authenticationNegative": { "origin": "otools-plugin://localhost", "bearerOmittedStatus": 401, "transport": "Independent Node HTTP request; unauthenticated WebKit response is hidden by CORS" },
+    "normalShutdown": { "observedServiceRoots": 1, "observedWorkers": 2, "remaining": 0 }
+  },
+  "preservedFailures": [
+    { "log": "/tmp/otools-real-host-run1.log", "result": "failed", "cause": "Test fixture quickDev:true selected the host standalone localhost:5174 entry. Corrected only fixture registration to quickDev:false with its explicit HTTP entry; no production permissions weakened." },
+    { "log": "/tmp/otools-real-host-package1.log", "result": "failed", "cause": "Production packaged video decoded and advanced, but the test observer could not read the unauthenticated HTTP response through WebKit CORS. Moved only the negative HTTP observation to Node with the exact custom Origin." }
+  ],
+  "regressions": {
+    "configValidation": { "passed": 9, "failed": 0, "log": "/tmp/otools-host-final-feature.log" },
+    "defaultPresentation": { "passed": 9, "failed": 0, "log": "/tmp/otools-host-final-default.log" },
+    "hostFrontendTargeted": { "passed": 31, "failed": 0, "log": "/tmp/otools-host-final-vitest.log" },
+    "hostVueTsc": { "status": "passed", "log": "/tmp/otools-host-final-tsc.log" },
+    "collectorAndProfile": { "passed": 2, "failed": 0, "log": "/tmp/otools-host-final-script.log" },
+    "releaseGuard": { "status": "rejected as intended", "log": "/tmp/otools-host-release-guard.log" }
+  },
+  "limits": [
+    "The full multi-instance playback flow used the real host with its development HTTP test entry. The production custom-protocol package phase verified one copied distributed index and authenticated playback, identity, hashing and normal shutdown.",
+    "Parallel hidden playback advanced in the reported real-host run. Earlier standalone occluded WKWebView failures remain recorded in verification-native.json; no universal background-stability claim is made.",
+    "This acceptance did not register OS default file associations; it exercised the normal argv/file-intake and single-instance delivery paths without altering user bindings.",
+    "Windows, Linux and Intel Mac were not tested by this harness run."
+  ]
+}

@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>UniPlayer native playback integration</title>
+  <style>
+    body { margin: 20px; color: #eee; background: #181818; font: 14px system-ui; }
+    main { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    video { display: block; width: 100%; height: 240px; background: #000; }
+    pre { white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Isolated WKWebView integration test</h1>
+  <main><video id="first" muted playsinline></video><video id="second" muted playsinline></video></main>
+  <pre id="status">Starting…</pre>
+  <script type="module">
+    import Hls from 'hls.js';
+    import { createHttpSession } from '/src/player/service.ts';
+    import { bindAuthenticatedHls } from '/src/player/hls.ts';
+
+    // Test orchestration/observations only. The HTTP session, authorization and
+    // HLS.js binding/worker are production code, not a second HLS implementation.
+    const config = globalThis.__UNIPLAYER_NATIVE_TEST__;
+    const startedAt = Date.now();
+    const videos = [...document.querySelectorAll('video')];
+    const status = document.querySelector('#status');
+    const records = [];
+    const frameCounts = [0, 0];
+    const frameMediaTimes = [null, null];
+    let stage = 'probe';
+    let done = false;
+    let timeout;
+    let heartbeatTimer;
+    let progressTimer;
+    let operationSequence = 0;
+    let requestSequence = 0;
+    const pendingOperations = new Map();
+    const clients = [];
+    const bindings = [null, null];
+    const responses = [null, null];
+    const fatals = [null, null];
+    const progressBusy = [false, false];
+    const seconds = (milliseconds) => Number((milliseconds / 1000).toFixed(3));
+    const output = (report) => {
+      const entry = { stage, elapsedSeconds: seconds(Date.now() - startedAt), timestampUTC: new Date().toISOString(),
+        visibility: document.visibilityState, ...report };
+      records.push(entry);
+      globalThis.webkit?.messageHandlers?.test?.postMessage(entry);
+      // Keep rendering work small; long diagnostic logs can otherwise obscure timing.
+      status.textContent = records.slice(-16).map((record) => JSON.stringify(record)).join('\n');
+    };
+    const fail = (message) => { throw new Error(message); };
+    const assert = (value, message) => { if (!value) fail(message); };
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const snapshot = (video) => ({
+      time: Number(video.currentTime.toFixed(3)), paused: video.paused,
+      readyState: video.readyState, networkState: video.networkState,
+      width: video.videoWidth, height: video.videoHeight,
+      playbackQualityTotalFrames: video.getVideoPlaybackQuality?.().totalVideoFrames ?? null,
+      presentedFrameCallbacks: frameCounts[videos.indexOf(video)],
+      frameMediaTime: frameMediaTimes[videos.indexOf(video)],
+      errorCode: video.error?.code ?? null,
+    });
+    const checkpoint = (name) => output({ event: 'checkpoint', name, progressBusy: [...progressBusy],
+      bindingsActive: bindings.map(Boolean), hlsFatal: [...fatals], videos: videos.map(snapshot),
+      pendingOperations: [...pendingOperations.values()].map((operation) => ({ ...operation, ageSeconds: seconds(Date.now() - operation.startedAt) })) });
+    const setStage = (next) => { stage = next; checkpoint('stage-enter'); };
+
+    videos.forEach((video, index) => {
+      const observeFrame = (_now, metadata) => {
+        frameCounts[index]++;
+        frameMediaTimes[index] = metadata.mediaTime;
+        if (!done) video.requestVideoFrameCallback(observeFrame);
+      };
+      video.requestVideoFrameCallback?.(observeFrame);
+      for (const name of ['play', 'playing', 'pause', 'waiting', 'stalled', 'ended', 'error', 'emptied']) {
+        video.addEventListener(name, () => output({ event: 'video-event', name, video: index + 1, ...snapshot(video) }));
+      }
+    });
+    document.addEventListener('visibilitychange', () => checkpoint('visibility-change'));
+    for (const name of ['pagehide', 'pageshow', 'freeze', 'resume']) {
+      globalThis.addEventListener(name, () => checkpoint(name));
+    }
+
+    // These deadlines are diagnosed in real wall seconds. WebKit may throttle
+    // page timers; the independent Swift 50-second watchdog is the final authority.
+    const operation = async (name, index, action, timeoutMs = 8000) => {
+      const id = ++operationSequence;
+      const began = Date.now();
+      const description = { id, name, video: index + 1, startedAt: began };
+      pendingOperations.set(id, description);
+      output({ event: 'operation', phase: 'begin', id, name, video: index + 1, timeoutSeconds: timeoutMs / 1000 });
+      let timer;
+      try {
+        const result = await Promise.race([
+          Promise.resolve().then(action),
+          new Promise((_resolve, reject) => {
+            timer = setTimeout(() => {
+              output({ event: 'operation', phase: 'timeout', id, name, video: index + 1, durationSeconds: seconds(Date.now() - began) });
+              reject(new Error(`Native test operation ${name} exceeded its ${timeoutMs / 1000}-second deadline.`));
+            }, timeoutMs);
+          }),
+        ]);
+        output({ event: 'operation', phase: 'end', id, name, video: index + 1, durationSeconds: seconds(Date.now() - began) });
+        return result;
+      } catch (error) {
+        output({ event: 'operation', phase: 'error', id, name, video: index + 1, durationSeconds: seconds(Date.now() - began), errorName: error?.name ?? 'Error' });
+        throw error;
+      } finally {
+        clearTimeout(timer);
+        pendingOperations.delete(id);
+      }
+    };
+    const observedFetch = (index) => async (input, init) => {
+      const id = ++requestSequence;
+      const began = Date.now();
+      const url = new URL(input instanceof Request ? input.url : String(input));
+      const route = /^\/api\/(open|seek|pause|progress|status|close)$/.test(url.pathname) ? url.pathname : '[other]';
+      output({ event: 'http', phase: 'begin', request: id, video: index + 1, route, method: init?.method ?? 'GET' });
+      try {
+        const response = await globalThis.fetch(input, init);
+        output({ event: 'http', phase: 'headers', request: id, video: index + 1, route,
+          status: response.status, durationSeconds: seconds(Date.now() - began) });
+        return response;
+      } catch (error) {
+        output({ event: 'http', phase: 'error', request: id, video: index + 1, route,
+          errorName: error?.name ?? 'Error', durationSeconds: seconds(Date.now() - began) });
+        throw error;
+      }
+    };
+    const observeMediaRequests = (client, index) => {
+      const authorize = client.authorizeXHR.bind(client);
+      client.authorizeXHR = (xhr, url) => {
+        // The original authorization validates the URL and sets the real Bearer.
+        authorize(xhr, url);
+        const parsed = new URL(url);
+        const generation = Number(parsed.pathname.split('/')[2]);
+        const kind = parsed.pathname.endsWith('.m3u8') ? 'playlist' : parsed.pathname.endsWith('.m4s') ? 'segment' : 'init';
+        const id = ++requestSequence;
+        const began = Date.now();
+        output({ event: 'media-http', phase: 'authorized', request: id, video: index + 1, generation, kind });
+        xhr.addEventListener('loadend', () => output({ event: 'media-http', phase: 'end', request: id, video: index + 1,
+          generation, kind, status: xhr.status, mime: xhr.getResponseHeader('Content-Type'), durationSeconds: seconds(Date.now() - began) }));
+      };
+    };
+    const waitFor = async (condition, message, limit = 12_000, name = 'condition') => {
+      const began = Date.now();
+      let lastTick = began;
+      output({ event: 'wait', phase: 'begin', name, timeoutSeconds: limit / 1000 });
+      while (!condition()) {
+        assert(!done, 'The native test was cancelled.');
+        assert(!fatals.some(Boolean), 'Production HLS binding reported a fatal playback error.');
+        assert(!videos.some((video) => video.error), 'WKWebView reported a media decoding/loading error.');
+        if (Date.now() - began >= limit) {
+          output({ event: 'wait', phase: 'timeout', name, durationSeconds: seconds(Date.now() - began), videos: videos.map(snapshot) });
+          fail(message);
+        }
+        if (Date.now() - lastTick >= 1000) {
+          output({ event: 'wait', phase: 'tick', name, durationSeconds: seconds(Date.now() - began), videos: videos.map(snapshot) });
+          lastTick = Date.now();
+        }
+        await sleep(80);
+      }
+      output({ event: 'wait', phase: 'end', name, durationSeconds: seconds(Date.now() - began) });
+    };
+    const position = (index) => responses[index].effectiveStart + videos[index].currentTime;
+    const closeAll = async () => {
+      clearInterval(progressTimer);
+      videos.forEach((video, index) => {
+        output({ event: 'cleanup-operation', phase: 'begin', name: 'video.pause', video: index + 1 });
+        video.pause();
+        output({ event: 'cleanup-operation', phase: 'end', name: 'video.pause', video: index + 1 });
+      });
+      bindings.forEach((binding, index) => {
+        if (!binding) return;
+        output({ event: 'cleanup-operation', phase: 'begin', name: 'hls.destroy', video: index + 1 });
+        binding.destroy(); bindings[index] = null;
+        output({ event: 'cleanup-operation', phase: 'end', name: 'hls.destroy', video: index + 1 });
+      });
+      return await Promise.allSettled(clients.map((client, index) => operation('close', index, () => client.close(), 1500)));
+    };
+    const finish = async (passed, message) => {
+      if (done) return;
+      // Report BEFORE cleanup, so a blocked close/destroy cannot hide the failure.
+      output({ event: 'finish-begin', intendedStatus: passed ? 'passed' : 'failed', message, videos: videos.map(snapshot) });
+      done = true;
+      clearTimeout(timeout);
+      clearInterval(heartbeatTimer);
+      const closed = await Promise.race([closeAll(), sleep(1800).then(() => null)]);
+      const closePassed = closed !== null && closed.every((result) => result.status === 'fulfilled');
+      output({ event: 'result', status: passed && closePassed ? 'passed' : 'failed',
+        message: passed && !closePassed ? 'Service close did not complete cleanly.' : message,
+        serviceClose: { attempted: clients.length, completed: closed?.filter((result) => result.status === 'fulfilled').length ?? 0 },
+        videos: videos.map(snapshot), scope: 'Standalone WKWebView; not the installed OTools application' });
+    };
+    const bind = async (index, response) => {
+      checkpoint(`binding-${index + 1}-begin`);
+      bindings[index]?.destroy();
+      videos[index].pause();
+      fatals[index] = null;
+      responses[index] = response;
+      bindings[index] = bindAuthenticatedHls(videos[index], clients[index], response, () => {
+        fatals[index] = 'fatal';
+        output({ event: 'hls-error', video: index + 1, fatal: true });
+      });
+      assert(!fatals[index], 'Production HLS binding rejected this WKWebView.');
+      videos[index].muted = true;
+      videos[index].playbackRate = 1;
+      try { await operation('video.play', index, () => videos[index].play(), 10_000); }
+      catch { fail('WKWebView refused or did not settle programmatic video playback.'); }
+      checkpoint(`binding-${index + 1}-end`);
+    };
+
+    async function run() {
+      assert(config && globalThis.webkit?.messageHandlers?.test, 'Run this page through the native integration runner.');
+      assert(location.origin === 'http://127.0.0.1:6576', 'The exact HTTP test origin is required.');
+      const codecs = [
+        'video/mp4; codecs="avc1.42E01E"',
+        'video/mp4; codecs="avc1.64001f"',
+        'audio/mp4; codecs="mp4a.40.2"',
+        'video/mp4; codecs="avc1.42E01E,mp4a.40.2"',
+      ];
+      const support = Object.fromEntries(codecs.map((codec) => [codec, globalThis.MediaSource?.isTypeSupported(codec) ?? false]));
+      output({ event: 'probe', mediaSource: typeof globalThis.MediaSource !== 'undefined',
+        managedMediaSource: typeof globalThis.ManagedMediaSource !== 'undefined',
+        mediaSourceTypeSupport: support, hlsSupported: Hls.isSupported(),
+        nativeHls: videos[0].canPlayType('application/vnd.apple.mpegurl'), userAgent: navigator.userAgent });
+      assert(Hls.isSupported(), 'MSE / production HLS.js is unavailable in this WKWebView.');
+      assert(support[codecs[0]] && support[codecs[2]], 'WKWebView does not support the required H264/AAC MSE types.');
+      if (config.probeOnly) { await finish(true, 'MediaSource H264/AAC probe passed.'); return; }
+      assert(Array.isArray(config.services) && config.services.length === 2, 'Two real service configurations are required.');
+      config.services.forEach((service, index) => {
+        assert(/^http:\/\/127\.0\.0\.1:\d+$/.test(service.origin) && /^[0-9a-f]{64}$/.test(service.token), 'Invalid isolated service configuration.');
+        assert(typeof service.path === 'string' && service.path.startsWith('/'), 'An absolute synthetic fixture path is required.');
+        const client = createHttpSession({ origin: service.origin, token: service.token, dispose: async () => {} }, observedFetch(index));
+        observeMediaRequests(client, index);
+        clients.push(client);
+      });
+      setStage('open');
+      const opened = await Promise.all(clients.map((client, index) => operation('open', index,
+        () => client.open(config.services[index].path, { start: 0, rate: 1 }), 14_000)));
+      assert(opened[0].mode === 'copy', 'The H264/AAC fixture did not use the real copy pipeline.');
+      assert(opened[1].mode === 'transcode', 'The H264/FLAC fixture did not use the real transcode pipeline.');
+      opened.forEach((response, index) => {
+        assert(response.generation > 0 && response.effectiveStart >= 0 && response.media.duration > 12, 'Open returned an invalid media generation/timeline.');
+        output({ event: 'open', video: index + 1, generation: response.generation, effectiveStart: response.effectiveStart,
+          mode: response.mode, duration: response.media.duration, videoCodec: response.media.videoCodec });
+      });
+      await Promise.all(opened.map((response, index) => bind(index, response)));
+      progressTimer = setInterval(() => {
+        clients.forEach(async (client, index) => {
+          if (done || progressBusy[index] || !responses[index]) return;
+          progressBusy[index] = true;
+          try { await operation('progress-periodic', index, () => client.progress(position(index), videos[index].paused, 1), 8000); }
+          catch { if (!done) fatals[index] = 'progress'; }
+          finally { progressBusy[index] = false; }
+        });
+      }, 400);
+      setStage('advancing');
+      await waitFor(() => videos.every((video) => video.currentTime >= 2 && !video.paused && video.readyState >= 2 && video.videoWidth > 0),
+        'Both videos did not decode and advance for two seconds.', 12_000, 'two-videos-advance');
+      assert(videos.every((video, index) => typeof video.requestVideoFrameCallback !== 'function' || frameCounts[index] >= 12), 'Both videos advanced but did not present real decoded frames.');
+      output({ event: 'advancing', videos: videos.map(snapshot) });
+
+      setStage('seek');
+      clearInterval(progressTimer);
+      await waitFor(() => progressBusy.every((busy) => !busy), 'Progress requests did not settle before seek.', 2500, 'progress-drain');
+      videos.forEach((video) => video.pause());
+      const previousGenerations = responses.map((response) => response.generation);
+      const sought = await Promise.all(clients.map((client, index) => operation('seek', index, () => client.seek(6, { rate: 1 }), 14_000)));
+      sought.forEach((response, index) => {
+        assert(response.generation > previousGenerations[index], 'Seek did not create a newer media generation.');
+        assert(response.effectiveStart >= 4 && response.effectiveStart <= 6.1, 'Seek effective start was outside the fixture keyframe/exact range.');
+        output({ event: 'seek', video: index + 1, requested: 6, effectiveStart: response.effectiveStart,
+          generation: response.generation, mode: response.mode, seekPrecision: response.seekPrecision ?? null });
+      });
+      await Promise.all(sought.map((response, index) => bind(index, response)));
+      await waitFor(() => videos.every((video) => video.currentTime >= 1.2 && !video.paused && video.videoWidth > 0),
+        'Both videos failed to resume after the real pipeline seek.', 12_000, 'seek-resume');
+      assert(position(0) >= 5.2 && position(1) >= 7.1, 'Seek did not advance on the global media timeline.');
+      output({ event: 'seek-advancing', globalPositions: [position(0), position(1)], videos: videos.map(snapshot) });
+
+      setStage('pause-isolation');
+      checkpoint('video-1-pause-before');
+      videos[0].pause();
+      checkpoint('video-1-pause-after');
+      await operation('pause', 0, () => clients[0].pause(position(0), true), 8000);
+      checkpoint('service-1-pause-ack');
+      const frozen = videos[0].currentTime;
+      const moving = videos[1].currentTime;
+      await waitFor(() => videos[1].currentTime >= moving + 1.2, 'Pausing the first service stopped the second video.', 6000, 'pause-other-continues');
+      assert(videos[0].paused && Math.abs(videos[0].currentTime - frozen) < 0.15, 'The first video did not remain paused.');
+      checkpoint('video-2-continued');
+      await operation('progress', 1, () => clients[1].progress(position(1), false, 1), 8000);
+      const states = await Promise.all(clients.map((client, index) => operation('status', index, () => client.status(), 5000)));
+      assert(states[0].paused === true && states[1].paused === false, 'The services did not retain independent pause states.');
+      assert(states[0].generation === sought[0].generation && states[1].generation === sought[1].generation, 'One service affected the other media generation.');
+      output({ event: 'pause-isolation', pausedDelta: videos[0].currentTime - frozen, continuingDelta: videos[1].currentTime - moving,
+        states: states.map((state) => ({ generation: state.generation, paused: state.paused, pipelineState: state.pipelineState, cacheBytes: state.cacheBytes })) });
+      setStage('close');
+      await finish(true, 'Real Bearer-authenticated HLS.js copy/transcode, two-video playback, seek and pause isolation passed.');
+    }
+    let previousHeartbeat = Date.now();
+    heartbeatTimer = setInterval(() => {
+      output({ event: 'page-heartbeat', tickGapSeconds: seconds(Date.now() - previousHeartbeat),
+        progressBusy: [...progressBusy], pendingOperationCount: pendingOperations.size });
+      previousHeartbeat = Date.now();
+    }, 1000);
+    timeout = setTimeout(() => {
+      output({ event: 'page-deadline-fired', deadlineSeconds: 43 });
+      void finish(false, 'Test-page deadline exceeded 43 seconds.');
+    }, 43_000);
+    globalThis.addEventListener('error', () => { output({ event: 'page-script-error' }); void finish(false, 'The native test page encountered a script error.'); });
+    globalThis.addEventListener('unhandledrejection', () => { output({ event: 'page-unhandled-rejection' }); void finish(false, 'The native test page encountered an unhandled rejection.'); });
+    void run().catch((error) => {
+      const safe = error instanceof Error && !config?.services?.some((service) => error.message.includes(service.token) || error.message.includes(service.path));
+      const message = safe ? error.message : 'Native test failed; secret-bearing error details were suppressed.';
+      output({ event: 'test-error', message });
+      void finish(false, message);
+    });
+  </script>
+</body>
+</html>

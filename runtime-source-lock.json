@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "target": {
+    "platform": "macos",
+    "architecture": "arm64",
+    "minimumMacOS": "12.0"
+  },
+  "sources": {
+    "ffmpeg": {
+      "version": "9.0.2",
+      "commit": "946fcce07b6dcd0331c8cc609192aeff5e1924f8",
+      "upstream": "https://git.ffmpeg.org/ffmpeg.git",
+      "url": "https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz",
+      "archive": "ffmpeg-9.0.2.tar.xz",
+      "sha256": "8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e",
+      "license": "GPL-3.0-or-later",
+      "licenseFiles": ["LICENSE.md", "COPYING.GPLv3", "COPYING.GPLv2", "COPYING.LGPLv3", "COPYING.LGPLv2.1"]
+    },
+    "x264": {
+      "version": "r3222",
+      "commit": "b35605ace3ddf7c1a5d67a2eb553f034aef41d55",
+      "upstream": "https://code.videolan.org/videolan/x264.git",
+      "url": "https://code.videolan.org/videolan/x264/-/archive/b35605ace3ddf7c1a5d67a2eb553f034aef41d55/x264-b35605ace3ddf7c1a5d67a2eb553f034aef41d55.tar.bz2",
+      "archive": "x264-b35605ace3ddf7c1a5d67a2eb553f034aef41d55.tar.bz2",
+      "sha256": "6eeb82934e69fd51e043bd8c5b0d152839638d1ce7aa4eea65a3fedcf83ff224",
+      "license": "GPL-2.0-or-later",
+      "licenseFiles": ["COPYING"]
+    }
+  }
+}

@@ -1,0 +1,238 @@
+{
+  "scope": "Standalone WKWebView; not installed OTools",
+  "diagnosticRun": [
+    {
+      "orchestrationElapsedSeconds": 1.223,
+      "orchestrationTimestampUTC": "2026-11-18T02:36:38.475Z",
+      "event": "swift-compile",
+      "status": "passed",
+      "swiftLanguageVersion": 6
+    },
+    {
+      "orchestrationElapsedSeconds": 2.273,
+      "orchestrationTimestampUTC": "2026-11-18T02:36:39.525Z",
+      "elapsedSeconds": 0.01,
+      "event": "probe",
+      "hlsSupported": true,
+      "managedMediaSource": true,
+      "mediaSource": true,
+      "mediaSourceTypeSupport": {
+        "audio/mp4; codecs=\"mp4a.40.2\"": true,
+        "video/mp4; codecs=\"avc1.42E01E,mp4a.40.2\"": true,
+        "video/mp4; codecs=\"avc1.42E01E\"": true,
+        "video/mp4; codecs=\"avc1.64001f\"": true
+      },
+      "nativeElapsedSeconds": 0.421,
+      "nativeHls": "maybe",
+      "nativeTimestampUTC": "2026-11-18T02:36:39Z",
+      "stage": "probe",
+      "timestampUTC": "2026-11-18T02:36:39.522Z",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)",
+      "visibility": "visible"
+    },
+    {
+      "orchestrationElapsedSeconds": 5.093,
+      "orchestrationTimestampUTC": "2026-11-18T02:36:42.345Z",
+      "elapsedSeconds": 2.831,
+      "event": "advancing",
+      "nativeElapsedSeconds": 3.239,
+      "nativeTimestampUTC": "2026-11-18T02:36:42Z",
+      "stage": "advancing",
+      "timestampUTC": "2026-11-18T02:36:42.343Z",
+      "videos": [
+        {
+          "errorCode": null,
+          "frameMediaTime": 2.0833333333333335,
+          "height": 180,
+          "networkState": 2,
+          "paused": false,
+          "playbackQualityTotalFrames": 56,
+          "presentedFrameCallbacks": 51,
+          "readyState": 4,
+          "time": 2.138,
+          "width": 320
+        },
+        {
+          "errorCode": null,
+          "frameMediaTime": 2.0416666666666665,
+          "height": 180,
+          "networkState": 2,
+          "paused": false,
+          "playbackQualityTotalFrames": 61,
+          "presentedFrameCallbacks": 46,
+          "readyState": 3,
+          "time": 2.065,
+          "width": 320
+        }
+      ],
+      "visibility": "visible"
+    },
+    {
+      "orchestrationElapsedSeconds": 5.338,
+      "orchestrationTimestampUTC": "2026-11-18T02:36:42.590Z",
+      "effectiveStart": 6,
+      "elapsedSeconds": 3.077,
+      "event": "seek",
+      "generation": 2,
+      "mode": "copy",
+      "nativeElapsedSeconds": 3.485,
+      "nativeTimestampUTC": "2026-11-18T02:36:42Z",
+      "requested": 6,
+      "seekPrecision": "keyframe",
+      "stage": "seek",
+      "timestampUTC": "2026-11-18T02:36:42.589Z",
+      "video": 1,
+      "visibility": "visible"
+    },
+    {
+      "orchestrationElapsedSeconds": 5.338,
+      "orchestrationTimestampUTC": "2026-11-18T02:36:42.590Z",
+      "effectiveStart": 6,
+      "elapsedSeconds": 3.077,
+      "event": "seek",
+      "generation": 2,
+      "mode": "transcode",
+      "nativeElapsedSeconds": 3.485,
+      "nativeTimestampUTC": "2026-11-18T02:36:42Z",
+      "requested": 6,
+      "seekPrecision": "exact",
+      "stage": "seek",
+      "timestampUTC": "2026-11-18T02:36:42.589Z",
+      "video": 2,
+      "visibility": "visible"
+    },
+    {
+      "orchestrationElapsedSeconds": 7.164,
+      "orchestrationTimestampUTC": "2026-11-18T02:36:44.416Z",
+      "elapsedSeconds": 4.903,
+      "event": "seek-advancing",
+      "globalPositions": [
+        7.394181344,
+        7.2361730600000005
+      ],
+      "nativeElapsedSeconds": 5.311,
+      "nativeTimestampUTC": "2026-11-18T02:36:44Z",
+      "stage": "seek",
+      "timestampUTC": "2026-11-18T02:36:44.415Z",
+      "videos": [
+        {
+          "errorCode": null,
+          "frameMediaTime": 1.3333333333333333,
+          "height": 180,
+          "networkState": 2,
+          "paused": false,
+          "playbackQualityTotalFrames": 37,
+          "presentedFrameCallbacks": 85,
+          "readyState": 3,
+          "time": 1.394,
+          "width": 320
+        },
+        {
+          "errorCode": null,
+          "frameMediaTime": 1.2083333333333333,
+          "height": 180,
+          "networkState": 2,
+          "paused": false,
+          "playbackQualityTotalFrames": 36,
+          "presentedFrameCallbacks": 72,
+          "readyState": 3,
+          "time": 1.236,
+          "width": 320
+        }
+      ],
+      "visibility": "visible"
+    },
+    {
+      "orchestrationElapsedSeconds": 8.428,
+      "orchestrationTimestampUTC": "2026-11-18T02:36:45.680Z",
+      "continuingDelta": 1.229889709,
+      "elapsedSeconds": 6.167,
+      "event": "pause-isolation",
+      "nativeElapsedSeconds": 6.575,
+      "nativeTimestampUTC": "2026-11-18T02:36:45Z",
+      "pausedDelta": 0,
+      "stage": "pause-isolation",
+      "states": [
+        {
+          "cacheBytes": 526195,
+          "generation": 2,
+          "paused": true,
+          "pipelineState": "stopped"
+        },
+        {
+          "cacheBytes": 317102,
+          "generation": 2,
+          "paused": false,
+          "pipelineState": "running"
+        }
+      ],
+      "timestampUTC": "2026-11-18T02:36:45.679Z",
+      "visibility": "visible"
+    },
+    {
+      "orchestrationElapsedSeconds": 8.446,
+      "orchestrationTimestampUTC": "2026-11-18T02:36:45.698Z",
+      "elapsedSeconds": 6.186,
+      "event": "result",
+      "message": "Real Bearer-authenticated HLS.js copy/transcode, two-video playback, seek and pause isolation passed.",
+      "nativeElapsedSeconds": 6.594,
+      "nativeTimestampUTC": "2026-11-18T02:36:45Z",
+      "scope": "Standalone WKWebView; not the installed OTools application",
+      "serviceClose": {
+        "attempted": 2,
+        "completed": 2
+      },
+      "stage": "close",
+      "status": "passed",
+      "timestampUTC": "2026-11-18T02:36:45.698Z",
+      "videos": [
+        {
+          "errorCode": null,
+          "frameMediaTime": 1.375,
+          "height": 0,
+          "networkState": 0,
+          "paused": true,
+          "playbackQualityTotalFrames": 0,
+          "presentedFrameCallbacks": 86,
+          "readyState": 0,
+          "time": 0,
+          "width": 0
+        },
+        {
+          "errorCode": null,
+          "frameMediaTime": 2.4583333333333335,
+          "height": 0,
+          "networkState": 0,
+          "paused": true,
+          "playbackQualityTotalFrames": 0,
+          "presentedFrameCallbacks": 101,
+          "readyState": 0,
+          "time": 0,
+          "width": 0
+        }
+      ],
+      "visibility": "visible"
+    },
+    {
+      "orchestrationElapsedSeconds": 8.776,
+      "orchestrationTimestampUTC": "2026-11-18T02:36:46.028Z",
+      "event": "cleanup",
+      "serviceRootsExited": 2,
+      "serviceRoots": 2,
+      "observedServiceWorkers": 4,
+      "serviceWorkersRemainingAfterExit": 0,
+      "ownedProcessGroupsRemaining": 0,
+      "serviceWorkersRemaining": 0
+    }
+  ],
+  "priorTimeoutRun": {
+    "status": "failed",
+    "timeoutSeconds": 50,
+    "scope": "hidden WKWebView",
+    "copyTranscodeAndSeekPassed": true,
+    "pauseIsolationNotConfirmed": true,
+    "cleanupServiceRoots": 2,
+    "workersRemaining": 0
+  },
+  "backgroundStability": "Not verified; occlusion/scheduling is a supported hypothesis, not a proven root cause"
+}

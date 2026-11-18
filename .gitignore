@@ -1,0 +1,13 @@
+node_modules/
+dist/
+dist-pack/
+coverage/
+.vite/
+*.tsbuildinfo
+service/target/
+bin/
+resources/ffmpeg/
+.media-runtime-cache/
+.tempbackups/
+.test-output/
+.DS_Store

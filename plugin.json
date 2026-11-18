@@ -1,0 +1,31 @@
+{
+  "uuid": "otools-uniplayer",
+  "packid": "otools-uniplayer",
+  "displayName": "UniPlayer",
+  "displayNameCN": "UniPlayer 播放器",
+  "developerName": "OTools",
+  "summary": "在 OTools 标签页播放本地视频，独立实例、续播与音轨字幕。",
+  "version": "0.1.0",
+  "minOtoolsVersion": "0.9.8",
+  "entry": "dist/index.html",
+  "devUrl": "http://127.0.0.1:6576",
+  "quickDev": true,
+  "logo": "logo.svg",
+  "hasAd": false,
+  "inPluginPurchase": false,
+  "openInBrowser": false,
+  "openMode": "tabs",
+  "instanceMode": "multiple",
+  "permissions": [],
+  "screenshots": [],
+  "key": ["uniplayer", "播放器", "视频", "video", "media", "mp4", "mkv"],
+  "sidecars": [{ "id": "player", "bin": "player" }],
+  "fileAssociations": [
+    { "ext": "mp4", "desc": "MPEG-4 视频", "mime": "video/mp4" },
+    { "ext": "mov", "desc": "QuickTime 视频", "mime": "video/quicktime" },
+    { "ext": "m4v", "desc": "M4V 视频", "mime": "video/x-m4v" },
+    { "ext": "mkv", "desc": "Matroska 视频", "mime": "video/x-matroska" },
+    { "ext": "webm", "desc": "WebM 视频", "mime": "video/webm" },
+    { "ext": "avi", "desc": "AVI 视频", "mime": "video/x-msvideo" }
+  ]
+}

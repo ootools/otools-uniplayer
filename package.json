@@ -1,0 +1,44 @@
+{
+  "name": "otools-uniplayer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Independent GPL-3.0-or-later video player for OTools tabs.",
+  "license": "GPL-3.0-or-later",
+  "packageManager": "pnpm@11.25.0",
+  "engines": { "node": ">=22.18" },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 6576 --strictPort",
+    "build": "vue-tsc --noEmit && vite build",
+    "typecheck": "vue-tsc --noEmit --pretty false",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:package": "node --test tests/package.test.mjs",
+    "test:service": "cargo test --manifest-path service/Cargo.toml",
+    "test:native": "node scripts/test-native-playback.mjs",
+    "build:service": "node scripts/build-service.mjs",
+    "prepare:media": "node scripts/build-media-runtime.mjs --jobs 8",
+    "prepare:media:homebrew": "node scripts/prepare-media-runtime.mjs --dev",
+    "verify:media": "node scripts/verify-media-runtime.mjs",
+    "pack:dev": "node scripts/pack-plugin.mjs --dev",
+    "verify:dev": "node scripts/verify-plugin.mjs --dev",
+    "preview": "vite preview --host 127.0.0.1 --port 6577 --strictPort"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.8.0",
+    "@tauri-apps/plugin-dialog": "^2.4.0",
+    "hls.js": "^1.6.15",
+    "otools-plugin-sdk": "file:vendor/otools-plugin-sdk",
+    "vue": "3.5.27"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.8",
+    "@vitejs/plugin-vue": "5.2.4",
+    "@vue/test-utils": "2.4.6",
+    "jsdom": "26.1.0",
+    "typescript": "5.9.3",
+    "vite": "6.4.1",
+    "vitest": "3.2.4",
+    "vue-tsc": "3.3.11"
+  }
+}

@@ -19,7 +19,7 @@ pnpm dev
 - 开发页面：`http://127.0.0.1:6576/`。普通浏览器使用明确标记的演示数据，**不能据此认定本地文件已经可播**。
 - 真实播放需要包含 `instanceMode` 和按视图托管 sidecar 的 OTools **API 5**，不能只按宿主版本号判断；未提供能力的旧宿主会显示错误而不伪造路径。
 - FFmpeg/FFprobe 默认使用包内 `resources/ffmpeg/<platform>/` 的工具。`FFMPEG_PATH`、`FFPROBE_PATH` 仅用于显式开发覆写；`pnpm prepare:media:homebrew` 是旧 Homebrew 开发准备路径，会生成非自包含资源，不应覆盖本轮静态包。
-- 插件目录独立自包含，不引用宿主源码；`vendor/otools-plugin-sdk` 是带来源记录的分发快照。
+- SDK 依赖 npm 发布的 `otools-plugin-sdk`（本插件需要 **0.4.0+** 的 instances/sidecar lifetime 能力）；不引用宿主源码。
 
 ## 使用
 

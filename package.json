@@ -6,7 +6,9 @@
   "description": "Independent GPL-3.0-or-later video player for OTools tabs.",
   "license": "GPL-3.0-or-later",
   "packageManager": "pnpm@11.25.0",
-  "engines": { "node": ">=22.18" },
+  "engines": {
+    "node": ">=22.18"
+  },
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 6576 --strictPort",
     "build": "vue-tsc --noEmit && vite build",
@@ -28,7 +30,7 @@
     "@tauri-apps/api": "^2.8.0",
     "@tauri-apps/plugin-dialog": "^2.4.0",
     "hls.js": "^1.6.15",
-    "otools-plugin-sdk": "file:vendor/otools-plugin-sdk",
+    "otools-plugin-sdk": "^0.4.0",
     "vue": "3.5.27"
   },
   "devDependencies": {

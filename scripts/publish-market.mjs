@@ -109,8 +109,8 @@ export async function publishMarket(url, access, payload, fetcher = fetch) {
   if (Number(result.code) !== 200) throw new Error('市场未返回明确的成功状态');
   return result;
 }
-export async function main(env = process.env, fetcher = fetch) {
-  if (env[1] === 'preflight') { validateAuthConfig(env.AUTH_MODE, env); console.log('市场认证配置格式检查通过（未请求市场、未发布）'); return; }
+export async function main(env = process.env, fetcher = fetch, argv = process.argv) {
+  if (argv[2] === 'preflight') { validateAuthConfig(env.AUTH_MODE, env); console.log('市场认证配置格式检查通过（未请求市场、未发布）'); return; }
   const manifest = JSON.parse(fs.readFileSync(env.PLUGIN_MANIFEST || 'plugin.json', 'utf8'));
   validateAuthConfig(env.AUTH_MODE, env);
   const access = await credential(env.AUTH_MODE, env);
@@ -120,5 +120,5 @@ export async function main(env = process.env, fetcher = fetch) {
   console.log('插件市场已确认发布成功');
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main().catch(error => { console.error(error.message); process.exitCode = 1; });
+  main(process.env, fetch, process.argv).catch(error => { console.error(error.message); process.exitCode = 1; });
 }
